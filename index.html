@@ -478,6 +478,38 @@
             background: #45a049;
         }
 
+        .btn-forgot-password {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.3s ease;
+            padding: 0;
+        }
+
+        .btn-forgot-password:hover {
+            color: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 18px;
@@ -548,6 +580,23 @@
                 <button class="btn-register" onclick="handleRegister()">Registrar</button>
             </div>
             <p class="auth-message">Use email e senha para entrar</p>
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn-forgot-password" onclick="showResetPasswordForm()">Esqueceu a senha?</button>
+            </div>
+            
+            <!-- Reset Password Form -->
+            <div id="resetPasswordForm" style="display: none; margin-top: 20px; padding: 15px; background: #f0f8f0; border-radius: 6px; border-left: 4px solid #4caf50;">
+                <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Redefinir Senha</h3>
+                <input 
+                    type="email" 
+                    id="resetEmail" 
+                    placeholder="Digite seu email"
+                    maxlength="100"
+                >
+                <button class="btn-primary" onclick="handlePasswordReset()" style="width: 100%; margin-top: 10px;">Enviar Link de Redefinição</button>
+                <button class="btn-secondary" onclick="hideResetPasswordForm()" style="width: 100%; margin-top: 8px;">Cancelar</button>
+                <p id="resetMessage" style="margin-top: 10px; text-align: center; font-size: 12px; color: #666;"></p>
+            </div>
         </div>
     </div>
 
@@ -785,6 +834,64 @@
                 showAuthMessage('Registrado com sucesso! Faça login agora', 'success');
                 document.getElementById('authEmail').value = '';
                 document.getElementById('authPassword').value = '';
+            }
+        }
+
+        function showResetPasswordForm() {
+            document.getElementById('authEmail').parentElement.style.display = 'none';
+            document.getElementById('authPassword').style.display = 'none';
+            document.querySelector('.auth-buttons').style.display = 'none';
+            document.querySelector('.auth-message').style.display = 'none';
+            document.getElementById('resetPasswordForm').style.display = 'block';
+        }
+
+        function hideResetPasswordForm() {
+            document.getElementById('authEmail').parentElement.style.display = 'block';
+            document.getElementById('authPassword').style.display = 'block';
+            document.querySelector('.auth-buttons').style.display = 'flex';
+            document.querySelector('.auth-message').style.display = 'block';
+            document.getElementById('resetPasswordForm').style.display = 'none';
+            document.getElementById('resetEmail').value = '';
+            document.getElementById('resetMessage').textContent = '';
+            document.getElementById('resetMessage').className = '';
+        }
+
+        async function handlePasswordReset() {
+            const email = document.getElementById('resetEmail').value.trim();
+            const resetMessage = document.getElementById('resetMessage');
+
+            if (!email) {
+                resetMessage.textContent = 'Digite um email válido';
+                resetMessage.className = 'error';
+                resetMessage.style.color = '#f44336';
+                resetMessage.style.background = '#ffebee';
+                resetMessage.style.padding = '8px';
+                resetMessage.style.borderRadius = '4px';
+                return;
+            }
+
+            const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname
+            });
+
+            if (error) {
+                resetMessage.textContent = 'Erro ao enviar email: ' + error.message;
+                resetMessage.className = 'error';
+                resetMessage.style.color = '#f44336';
+                resetMessage.style.background = '#ffebee';
+                resetMessage.style.padding = '8px';
+                resetMessage.style.borderRadius = '4px';
+            } else {
+                resetMessage.textContent = 'Email de redefinição enviado! Verifique sua caixa de entrada';
+                resetMessage.className = 'success';
+                resetMessage.style.color = '#4caf50';
+                resetMessage.style.background = '#f0f8f0';
+                resetMessage.style.padding = '8px';
+                resetMessage.style.borderRadius = '4px';
+                document.getElementById('resetEmail').value = '';
+                setTimeout(() => {
+                    hideResetPasswordForm();
+                }, 3000);
             }
         }
 
@@ -1179,11 +1286,6 @@
                 authInitialized = true;
                 currentUser = session.user;
                 await loadApp();
-            } else {
-                // Se não tem sessão, mostra tela de login
-                authInitialized = true;
-                document.getElementById('authScreen').style.display = 'flex';
-                document.getElementById('appScreen').style.display = 'none';
             }
         });
 
@@ -1192,6 +1294,9 @@
         window.handleRegister = handleRegister;
         window.handleLogout = handleLogout;
         window.handleAuthKeypress = handleAuthKeypress;
+        window.showResetPasswordForm = showResetPasswordForm;
+        window.hideResetPasswordForm = hideResetPasswordForm;
+        window.handlePasswordReset = handlePasswordReset;
         window.createNewList = createNewList;
         window.addItem = addItem;
         window.togglePurchased = togglePurchased;
