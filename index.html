@@ -311,15 +311,6 @@
             background: #5568d3;
         }
 
-        .btn-secondary {
-            background: #4caf50;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #45a049;
-        }
-
         .new-list-form {
             background: white;
             padding: 20px;
@@ -457,9 +448,34 @@
             flex-wrap: wrap;
         }
 
-        .share-buttons button {
+        .btn-share {
             flex: 1;
             min-width: 140px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-share-whatsapp {
+            background: #25d366;
+            color: white;
+        }
+
+        .btn-share-whatsapp:hover {
+            background: #20ba5a;
+        }
+
+        .btn-share-email {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-share-email:hover {
+            background: #45a049;
         }
 
         @media (max-width: 768px) {
@@ -503,8 +519,8 @@
                 flex-direction: column;
             }
 
-            .share-buttons button {
-                min-width: unset;
+            .btn-share {
+                min-width: 100%;
             }
         }
     </style>
@@ -646,10 +662,10 @@
                     <div class="sync-indicator" id="syncStatus">✓ Sincronizado</div>
 
                     <div class="share-buttons">
-                        <button class="btn-primary btn-secondary" onclick="shareList('whatsapp')">
+                        <button class="btn-share btn-share-whatsapp" onclick="shareList('whatsapp')">
                             📱 Compartilhar no WhatsApp
                         </button>
-                        <button class="btn-primary btn-secondary" onclick="shareList('email')">
+                        <button class="btn-share btn-share-email" onclick="shareList('email')">
                             ✉️ Compartilhar por Email
                         </button>
                     </div>
@@ -772,19 +788,33 @@
         }
 
         async function handleLogout() {
+            console.log('Iniciando logout...');
             const { error } = await supabase.auth.signOut();
+            
             if (error) {
+                console.error('Erro ao deslogar:', error);
                 alert('Erro ao sair: ' + error.message);
                 return;
             }
 
+            console.log('Logout bem-sucedido!');
+            
+            // Limpar dados
             currentUser = null;
             currentListId = null;
+            lists = [];
+            items = [];
+            stockItems = [];
 
+            // Limpar UI
             document.getElementById('authScreen').style.display = 'flex';
             document.getElementById('appScreen').style.display = 'none';
             document.getElementById('authEmail').value = '';
             document.getElementById('authPassword').value = '';
+            document.getElementById('authMessage').textContent = '';
+            document.getElementById('authMessage').className = '';
+
+            console.log('UI resetada para login');
         }
 
         function handleAuthKeypress(e) {
@@ -1107,6 +1137,7 @@
             }
         }
 
+        // FUNÇÕES DE COMPARTILHAMENTO
         function buildShareText() {
             if (!currentListId || items.length === 0) {
                 alert('Nenhum item na lista para compartilhar.');
@@ -1122,12 +1153,14 @@
             let lines = [];
             lines.push(`🛒 ${listName}`);
             lines.push('');
+            lines.push('ITENS:');
             items.forEach(i => {
                 const valueStr = i.value > 0 ? ` - R$ ${i.value.toFixed(2).replace('.', ',')}` : '';
-                const status = i.purchased ? '✅' : '⬜';
+                const status = i.purchased ? '[X]' : '[ ]';
                 lines.push(`${status} ${i.name} (${i.quantity}x)${valueStr}`);
             });
             lines.push('');
+            lines.push(`RESUMO:`);
             lines.push(`Itens comprados: ${purchased}/${items.length}`);
             lines.push(`Valor total: R$ ${totalValue.toFixed(2).replace('.', ',')}`);
 
@@ -1138,21 +1171,28 @@
             const text = buildShareText();
             if (!text) return;
 
-            const encoded = encodeURIComponent(text);
-
             if (type === 'whatsapp') {
+                const encoded = encodeURIComponent(text);
                 const url = `https://wa.me/?text=${encoded}`;
-                window.open(url, '_blank');
+                
+                setTimeout(() => {
+                    window.open(url, '_blank', 'width=800,height=600');
+                }, 300);
+                
             } else if (type === 'email') {
                 const subject = encodeURIComponent('Lista de Compras - Supermercado Plus');
-                const mailto = `mailto:?subject=${subject}&body=${encoded}`;
-                window.location.href = mailto;
+                const body = encodeURIComponent(text);
+                const mailto = `mailto:?subject=${subject}&body=${body}`;
+                
+                setTimeout(() => {
+                    window.location.href = mailto;
+                }, 300);
             }
         }
 
         // Check auth state
         supabase.auth.onAuthStateChange(async (event, session) => {
-            if (session) {
+            if (session && session.user) {
                 currentUser = session.user;
                 await loadApp();
             } else {
