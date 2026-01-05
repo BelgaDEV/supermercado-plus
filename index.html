@@ -1335,37 +1335,62 @@
             const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
             const unitValue = parseFloat(document.getElementById('itemValue').value) || 0;
 
-            if (!name || !currentListId) {
-                showNotification('Preencha o nome do item e o valor', 'error');
+            // Validações
+            if (!name) {
+                showNotification('❌ Digite o nome do item (ex: 12 leites)', 'error');
+                return;
+            }
+
+            if (!currentListId) {
+                showNotification('❌ Selecione uma lista primeiro', 'error');
                 return;
             }
 
             if (unitValue <= 0) {
-                showNotification('Digite um valor unitário válido', 'error');
+                showNotification('❌ Digite um valor unitário válido (maior que 0)', 'error');
+                return;
+            }
+
+            if (quantity <= 0) {
+                showNotification('❌ A quantidade deve ser maior que 0', 'error');
                 return;
             }
 
             const totalItemValue = quantity * unitValue;
 
-            await supabase
-                .from('shopping_items')
-                .insert({
-                    list_id: currentListId,
-                    name,
-                    category,
-                    quantity,
-                    unit_value: unitValue,
-                    value: totalItemValue,
-                    purchased: false
-                });
+            try {
+                const { data, error } = await supabase
+                    .from('shopping_items')
+                    .insert({
+                        list_id: currentListId,
+                        name,
+                        category: category || null,
+                        quantity,
+                        unit_value: unitValue,
+                        value: totalItemValue,
+                        purchased: false
+                    })
+                    .select();
 
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemCategory').value = '';
-            document.getElementById('itemQuantity').value = '1';
-            document.getElementById('itemValue').value = '';
-            
-            await loadItems();
-            showNotification('✓ Item adicionado com sucesso!', 'success');
+                if (error) {
+                    console.error('Erro ao inserir:', error);
+                    showNotification('❌ Erro ao adicionar: ' + error.message, 'error');
+                    return;
+                }
+
+                // Limpar campos
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemCategory').value = '';
+                document.getElementById('itemQuantity').value = '1';
+                document.getElementById('itemValue').value = '';
+                
+                // Recarregar lista
+                await loadItems();
+                showNotification(`✓ ${name} (${quantity}x) adicionado por R$ ${totalItemValue.toFixed(2).replace('.', ',')}!`, 'success');
+            } catch (err) {
+                console.error('Erro ao adicionar item:', err);
+                showNotification('❌ Erro ao adicionar item', 'error');
+            }
         }
 
         async function togglePurchased(itemId) {
