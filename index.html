@@ -121,6 +121,111 @@
             margin-bottom: 15px;
         }
 
+        .btn-forgot-password {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: #667eea;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: all 0.3s ease;
+        }
+
+        .btn-forgot-password:hover {
+            color: #5568d3;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .modal-box h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .modal-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .modal-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-message {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #5568d3;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -478,36 +583,102 @@
             background: #45a049;
         }
 
-        .btn-forgot-password {
-            background: none;
-            border: none;
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.success {
+            border-left: 4px solid #4caf50;
+            color: #4caf50;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f44336;
+            color: #f44336;
+        }
+
+        .notification.info {
+            border-left: 4px solid #667eea;
             color: #667eea;
-            font-size: 13px;
-            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .filter-section {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 20px;
             cursor: pointer;
-            text-decoration: underline;
-            transition: color 0.3s ease;
-            padding: 0;
+            font-size: 12px;
+            transition: all 0.2s ease;
         }
 
-        .btn-forgot-password:hover {
-            color: #5568d3;
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
         }
 
-        .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
-            padding: 10px 16px;
-            border: none;
+        .filter-btn:hover {
+            border-color: #667eea;
+        }
+
+        .statistics {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
             border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
         }
 
-        .btn-secondary:hover {
-            background: #d0d0d0;
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
         }
 
         @media (max-width: 768px) {
@@ -547,6 +718,10 @@
                 max-width: 90%;
             }
 
+            .modal-box {
+                max-width: 85%;
+            }
+
             .share-buttons {
                 flex-direction: column;
             }
@@ -580,22 +755,25 @@
                 <button class="btn-register" onclick="handleRegister()">Registrar</button>
             </div>
             <p class="auth-message">Use email e senha para entrar</p>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="btn-forgot-password" onclick="showResetPasswordForm()">Esqueceu a senha?</button>
-            </div>
-            
-            <!-- Reset Password Form -->
-            <div id="resetPasswordForm" style="display: none; margin-top: 20px; padding: 15px; background: #f0f8f0; border-radius: 6px; border-left: 4px solid #4caf50;">
-                <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">Redefinir Senha</h3>
-                <input 
-                    type="email" 
-                    id="resetEmail" 
-                    placeholder="Digite seu email"
-                    maxlength="100"
-                >
-                <button class="btn-primary" onclick="handlePasswordReset()" style="width: 100%; margin-top: 10px;">Enviar Link de Redefinição</button>
-                <button class="btn-secondary" onclick="hideResetPasswordForm()" style="width: 100%; margin-top: 8px;">Cancelar</button>
-                <p id="resetMessage" style="margin-top: 10px; text-align: center; font-size: 12px; color: #666;"></p>
+            <button class="btn-forgot-password" onclick="showForgotPasswordModal()">Esqueceu a senha?</button>
+        </div>
+    </div>
+
+    <!-- MODAL REDEFINIR SENHA -->
+    <div id="forgotPasswordModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Redefinir Senha</h2>
+            <div id="forgotPasswordMessage"></div>
+            <p class="modal-message">Digite seu email para receber um link de redefinição</p>
+            <input 
+                type="email" 
+                id="forgotPasswordEmail" 
+                placeholder="Seu email"
+                onkeypress="handleForgotPasswordKeypress(event)"
+            >
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="sendPasswordResetEmail()">Enviar Link</button>
+                <button class="btn-cancel" onclick="closeForgotPasswordModal()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -639,6 +817,11 @@
                 </div>
 
                 <div id="listContent" style="display: none;">
+                    <div id="statisticsContainer" class="statistics" style="display: none;"></div>
+
+                    <div class="section-title">Filtros</div>
+                    <div class="filter-section" id="filterSection"></div>
+
                     <div class="section-title">Adicionar Item</div>
                     <div class="new-list-form">
                         <div class="input-group">
@@ -799,6 +982,53 @@
             'shampoo': 'Higiene', 'sabonete': 'Higiene'
         };
 
+        // FUNÇÕES DE REDEFINIR SENHA
+        function showForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('active');
+            document.getElementById('forgotPasswordEmail').focus();
+            document.getElementById('forgotPasswordMessage').textContent = '';
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.remove('active');
+            document.getElementById('forgotPasswordEmail').value = '';
+            document.getElementById('forgotPasswordMessage').textContent = '';
+        }
+
+        function handleForgotPasswordKeypress(e) {
+            if (e.key === 'Enter') {
+                sendPasswordResetEmail();
+            }
+        }
+
+        async function sendPasswordResetEmail() {
+            const email = document.getElementById('forgotPasswordEmail').value.trim();
+            
+            if (!email) {
+                showForgotPasswordMessage('Preencha seu email', 'error');
+                return;
+            }
+
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin
+            });
+
+            if (error) {
+                showForgotPasswordMessage('Erro: ' + error.message, 'error');
+            } else {
+                showForgotPasswordMessage('Link de redefinição enviado! Verifique seu email', 'success');
+                setTimeout(() => {
+                    closeForgotPasswordModal();
+                }, 2000);
+            }
+        }
+
+        function showForgotPasswordMessage(msg, type) {
+            const msgDiv = document.getElementById('forgotPasswordMessage');
+            msgDiv.textContent = msg;
+            msgDiv.className = type === 'error' ? 'auth-message error' : 'auth-message success';
+        }
+
         // Auth handlers
         async function handleLogin() {
             const email = document.getElementById('authEmail').value.trim();
@@ -837,64 +1067,6 @@
             }
         }
 
-        function showResetPasswordForm() {
-            document.getElementById('authEmail').parentElement.style.display = 'none';
-            document.getElementById('authPassword').style.display = 'none';
-            document.querySelector('.auth-buttons').style.display = 'none';
-            document.querySelector('.auth-message').style.display = 'none';
-            document.getElementById('resetPasswordForm').style.display = 'block';
-        }
-
-        function hideResetPasswordForm() {
-            document.getElementById('authEmail').parentElement.style.display = 'block';
-            document.getElementById('authPassword').style.display = 'block';
-            document.querySelector('.auth-buttons').style.display = 'flex';
-            document.querySelector('.auth-message').style.display = 'block';
-            document.getElementById('resetPasswordForm').style.display = 'none';
-            document.getElementById('resetEmail').value = '';
-            document.getElementById('resetMessage').textContent = '';
-            document.getElementById('resetMessage').className = '';
-        }
-
-        async function handlePasswordReset() {
-            const email = document.getElementById('resetEmail').value.trim();
-            const resetMessage = document.getElementById('resetMessage');
-
-            if (!email) {
-                resetMessage.textContent = 'Digite um email válido';
-                resetMessage.className = 'error';
-                resetMessage.style.color = '#f44336';
-                resetMessage.style.background = '#ffebee';
-                resetMessage.style.padding = '8px';
-                resetMessage.style.borderRadius = '4px';
-                return;
-            }
-
-            const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + window.location.pathname
-            });
-
-            if (error) {
-                resetMessage.textContent = 'Erro ao enviar email: ' + error.message;
-                resetMessage.className = 'error';
-                resetMessage.style.color = '#f44336';
-                resetMessage.style.background = '#ffebee';
-                resetMessage.style.padding = '8px';
-                resetMessage.style.borderRadius = '4px';
-            } else {
-                resetMessage.textContent = 'Email de redefinição enviado! Verifique sua caixa de entrada';
-                resetMessage.className = 'success';
-                resetMessage.style.color = '#4caf50';
-                resetMessage.style.background = '#f0f8f0';
-                resetMessage.style.padding = '8px';
-                resetMessage.style.borderRadius = '4px';
-                document.getElementById('resetEmail').value = '';
-                setTimeout(() => {
-                    hideResetPasswordForm();
-                }, 3000);
-            }
-        }
-
         async function handleLogout() {
             const { error } = await supabase.auth.signOut();
             
@@ -903,14 +1075,12 @@
                 return;
             }
 
-            // Limpar dados
             currentUser = null;
             currentListId = null;
             lists = [];
             items = [];
             stockItems = [];
 
-            // Limpar UI
             document.getElementById('authScreen').style.display = 'flex';
             document.getElementById('appScreen').style.display = 'none';
             document.getElementById('authEmail').value = '';
@@ -1289,14 +1459,194 @@
             }
         });
 
+        // Sistema de notificações
+        function showNotification(message, type = 'info') {
+            const container = document.body;
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Filtros de itens
+        let currentFilter = 'todos';
+
+        function updateFilterButtons() {
+            const filterSection = document.getElementById('filterSection');
+            filterSection.innerHTML = '';
+
+            const filters = [
+                { id: 'todos', label: '📋 Todos' },
+                { id: 'comprados', label: '✓ Comprados' },
+                { id: 'nao-comprados', label: '○ Não Comprados' }
+            ];
+
+            filters.forEach(filter => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn' + (currentFilter === filter.id ? ' active' : '');
+                btn.textContent = filter.label;
+                btn.onclick = () => {
+                    currentFilter = filter.id;
+                    updateFilterButtons();
+                    updateListDisplay();
+                };
+                filterSection.appendChild(btn);
+            });
+        }
+
+        function getFilteredItems() {
+            switch(currentFilter) {
+                case 'comprados':
+                    return items.filter(i => i.purchased);
+                case 'nao-comprados':
+                    return items.filter(i => !i.purchased);
+                default:
+                    return items;
+            }
+        }
+
+        // Estatísticas melhoradas
+        function updateStatistics() {
+            const statsContainer = document.getElementById('statisticsContainer');
+            if (items.length === 0) {
+                statsContainer.style.display = 'none';
+                return;
+            }
+
+            const total = items.length;
+            const purchased = items.filter(i => i.purchased).length;
+            const pending = total - purchased;
+            const totalValue = items.reduce((sum, i) => sum + (i.value * i.quantity), 0);
+            const spentValue = items.filter(i => i.purchased).reduce((sum, i) => sum + (i.value * i.quantity), 0);
+
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total de Itens</div>
+                    <div class="stat-value">${total}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Comprados</div>
+                    <div class="stat-value">${purchased}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Faltam</div>
+                    <div class="stat-value">${pending}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Valor Total</div>
+                    <div class="stat-value">R$ ${totalValue.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Já Gasto</div>
+                    <div class="stat-value">R$ ${spentValue.toFixed(2).replace('.', ',')}</div>
+                </div>
+            `;
+            statsContainer.style.display = 'grid';
+        }
+
+        // Atualizar display com filtros
+        const originalUpdateListDisplay = updateListDisplay;
+        updateListDisplay = function() {
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+
+            const filteredItems = getFilteredItems();
+
+            if (filteredItems.length === 0) {
+                itemsList.innerHTML = '<div class="empty-state" style="padding: 20px;">Nenhum item nesta categoria</div>';
+            } else {
+                filteredItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'list-item' + (item.purchased ? ' purchased' : '');
+                    const valueStr = item.value > 0 ? `R$ ${item.value.toFixed(2).replace('.', ',')}` : '—';
+                    
+                    div.innerHTML = `
+                        <div>
+                            <div class="item-name">${item.name}</div>
+                            ${item.category ? `<div class="item-category">${item.category}</div>` : ''}
+                        </div>
+                        <div class="item-quantity">${item.quantity}x</div>
+                        <div class="item-value">${valueStr}</div>
+                        <div class="item-actions">
+                            <button class="btn-small btn-check" onclick="togglePurchased('${item.id}')">
+                                ${item.purchased ? '✓' : '○'}
+                            </button>
+                            <button class="btn-small btn-delete" onclick="deleteItem('${item.id}')">✕</button>
+                        </div>
+                    `;
+                    itemsList.appendChild(div);
+                });
+            }
+
+            updateStatistics();
+        };
+
+        // Atualizar ao carregar itens
+        const originalLoadItems = loadItems;
+        loadItems = async function() {
+            if (!currentListId) return;
+
+            const { data, error } = await supabase
+                .from('shopping_items')
+                .select('*')
+                .eq('list_id', currentListId)
+                .order('created_at', { ascending: true });
+
+            if (!error) {
+                items = data || [];
+                currentFilter = 'todos';
+                updateFilterButtons();
+                updateListDisplay();
+                showNotification('Lista atualizada!', 'success');
+            }
+        };
+
+        // Melhorar feedback ao adicionar item
+        const originalAddItem = addItem;
+        addItem = async function() {
+            const name = document.getElementById('itemName').value.trim();
+            const category = document.getElementById('itemCategory').value;
+            const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
+            const value = parseFloat(document.getElementById('itemValue').value) || 0;
+
+            if (!name || !currentListId) {
+                showNotification('Preencha o nome do item', 'error');
+                return;
+            }
+
+            await supabase
+                .from('shopping_items')
+                .insert({
+                    list_id: currentListId,
+                    name,
+                    category,
+                    quantity,
+                    value,
+                    purchased: false
+                });
+
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemCategory').value = '';
+            document.getElementById('itemQuantity').value = '1';
+            document.getElementById('itemValue').value = '';
+            await loadItems();
+            showNotification(`✓ "${name}" adicionado à lista!`, 'success');
+        };
+
         // Export functions to global scope
         window.handleLogin = handleLogin;
         window.handleRegister = handleRegister;
         window.handleLogout = handleLogout;
         window.handleAuthKeypress = handleAuthKeypress;
-        window.showResetPasswordForm = showResetPasswordForm;
-        window.hideResetPasswordForm = hideResetPasswordForm;
-        window.handlePasswordReset = handlePasswordReset;
+        window.showForgotPasswordModal = showForgotPasswordModal;
+        window.closeForgotPasswordModal = closeForgotPasswordModal;
+        window.handleForgotPasswordKeypress = handleForgotPasswordKeypress;
+        window.sendPasswordResetEmail = sendPasswordResetEmail;
         window.createNewList = createNewList;
         window.addItem = addItem;
         window.togglePurchased = togglePurchased;
@@ -1306,6 +1656,7 @@
         window.deleteStockItem = deleteStockItem;
         window.switchTab = switchTab;
         window.shareList = shareList;
+        window.showNotification = showNotification;
     </script>
 </body>
 </html>
