@@ -735,6 +735,7 @@
         let lists = [];
         let items = [];
         let stockItems = [];
+        let authInitialized = false;
 
         const productCategoryMap = {
             'pão': 'Padaria', 'pão francês': 'Padaria', 'baguete': 'Padaria',
@@ -764,7 +765,7 @@
                 showAuthMessage(error.message, 'error');
             } else {
                 currentUser = data.user;
-                loadApp();
+                await loadApp();
             }
         }
 
@@ -788,17 +789,13 @@
         }
 
         async function handleLogout() {
-            console.log('Iniciando logout...');
             const { error } = await supabase.auth.signOut();
             
             if (error) {
                 console.error('Erro ao deslogar:', error);
-                alert('Erro ao sair: ' + error.message);
                 return;
             }
 
-            console.log('Logout bem-sucedido!');
-            
             // Limpar dados
             currentUser = null;
             currentListId = null;
@@ -812,9 +809,6 @@
             document.getElementById('authEmail').value = '';
             document.getElementById('authPassword').value = '';
             document.getElementById('authMessage').textContent = '';
-            document.getElementById('authMessage').className = '';
-
-            console.log('UI resetada para login');
         }
 
         function handleAuthKeypress(e) {
@@ -889,7 +883,7 @@
         }
 
         function setupRealtimeListeners() {
-            const listChannel = supabase
+            supabase
                 .channel('shopping_items_changes')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'shopping_items' },
@@ -897,7 +891,7 @@
                 )
                 .subscribe();
 
-            const stockChannel = supabase
+            supabase
                 .channel('stock_items_changes')
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'stock_items' },
@@ -921,8 +915,6 @@
             if (!error) {
                 document.getElementById('newListName').value = '';
                 await loadLists();
-            } else {
-                alert('Erro ao criar lista: ' + error.message);
             }
         }
 
@@ -994,7 +986,7 @@
                 return;
             }
 
-            const { error } = await supabase
+            await supabase
                 .from('shopping_items')
                 .insert({
                     list_id: currentListId,
@@ -1005,13 +997,11 @@
                     purchased: false
                 });
 
-            if (!error) {
-                document.getElementById('itemName').value = '';
-                document.getElementById('itemCategory').value = '';
-                document.getElementById('itemQuantity').value = '1';
-                document.getElementById('itemValue').value = '';
-                await loadItems();
-            }
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemCategory').value = '';
+            document.getElementById('itemQuantity').value = '1';
+            document.getElementById('itemValue').value = '';
+            await loadItems();
         }
 
         async function togglePurchased(itemId) {
@@ -1151,7 +1141,7 @@
             const purchased = items.filter(i => i.purchased).length;
 
             let lines = [];
-            lines.push(`🛒 ${listName}`);
+            lines.push(`LISTA: ${listName}`);
             lines.push('');
             lines.push('ITENS:');
             items.forEach(i => {
@@ -1172,31 +1162,28 @@
             if (!text) return;
 
             if (type === 'whatsapp') {
-                const encoded = encodeURIComponent(text);
-                const url = `https://wa.me/?text=${encoded}`;
-                
-                setTimeout(() => {
-                    window.open(url, '_blank', 'width=800,height=600');
-                }, 300);
-                
+                const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+                window.open(url, '_blank');
             } else if (type === 'email') {
                 const subject = encodeURIComponent('Lista de Compras - Supermercado Plus');
-                const body = encodeURIComponent(text);
-                const mailto = `mailto:?subject=${subject}&body=${body}`;
-                
-                setTimeout(() => {
-                    window.location.href = mailto;
-                }, 300);
+                const url = 'mailto:?subject=' + subject + '&body=' + encodeURIComponent(text);
+                window.location.href = url;
             }
         }
 
-        // Check auth state
+        // Check auth state APENAS UMA VEZ
         supabase.auth.onAuthStateChange(async (event, session) => {
+            if (authInitialized) return;
+            
             if (session && session.user) {
+                authInitialized = true;
                 currentUser = session.user;
                 await loadApp();
             } else {
-                currentUser = null;
+                // Se não tem sessão, mostra tela de login
+                authInitialized = true;
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('appScreen').style.display = 'none';
             }
         });
 
