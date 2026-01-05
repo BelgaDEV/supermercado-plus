@@ -367,6 +367,23 @@
             color: #667eea;
         }
 
+        .item-value-calc {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            text-align: right;
+        }
+
+        .item-value-unit {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .item-value-total {
+            font-weight: 600;
+            color: #667eea;
+        }
+
         .item-actions {
             display: flex;
             gap: 5px;
@@ -529,6 +546,36 @@
             color: #667eea;
         }
 
+        .statistics {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
@@ -620,65 +667,6 @@
                 transform: translateX(0);
                 opacity: 1;
             }
-        }
-
-        .filter-section {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .filter-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .filter-btn:hover {
-            border-color: #667eea;
-        }
-
-        .statistics {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-
-        .stat-card {
-            text-align: center;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #667eea;
         }
 
         @media (max-width: 768px) {
@@ -778,6 +766,31 @@
         </div>
     </div>
 
+    <!-- MODAL NOVA SENHA -->
+    <div id="resetPasswordModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Nova Senha</h2>
+            <div id="resetPasswordMessage"></div>
+            <p class="modal-message">Defina sua nova senha</p>
+            <input 
+                type="password" 
+                id="newPassword" 
+                placeholder="Nova senha"
+                onkeypress="handleResetPasswordKeypress(event)"
+            >
+            <input 
+                type="password" 
+                id="confirmPassword" 
+                placeholder="Confirmar senha"
+                onkeypress="handleResetPasswordKeypress(event)"
+            >
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="updatePassword()">Atualizar Senha</button>
+                <button class="btn-cancel" onclick="closeResetPasswordModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- APP SCREEN -->
     <div id="appScreen" class="container" style="display: none;">
         <div class="header">
@@ -819,16 +832,13 @@
                 <div id="listContent" style="display: none;">
                     <div id="statisticsContainer" class="statistics" style="display: none;"></div>
 
-                    <div class="section-title">Filtros</div>
-                    <div class="filter-section" id="filterSection"></div>
-
                     <div class="section-title">Adicionar Item</div>
                     <div class="new-list-form">
                         <div class="input-group">
                             <input 
                                 type="text" 
                                 id="itemName" 
-                                placeholder="Nome do item"
+                                placeholder="Nome do item (ex: 12 leites)"
                                 maxlength="50"
                                 onkeyup="autoSuggestCategory()"
                             >
@@ -859,7 +869,7 @@
                         <input 
                             type="number" 
                             id="itemValue" 
-                            placeholder="Valor (R$)"
+                            placeholder="Valor unitário (R$)"
                             step="0.01"
                             min="0"
                         >
@@ -955,13 +965,11 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
 
-        // Inicializar Supabase
         const SUPABASE_URL = 'https://ozwqghlhtaigiesnaphn.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_kYhFng_sQiFRzqz4snW2GA_s3a8W08-';
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Global state
         let currentUser = null;
         let currentListId = null;
         let lists = [];
@@ -982,7 +990,19 @@
             'shampoo': 'Higiene', 'sabonete': 'Higiene'
         };
 
-        // FUNÇÕES DE REDEFINIR SENHA
+        // ===== REDEFINIR SENHA =====
+        function checkPasswordResetToken() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const type = urlParams.get('type');
+            const accessToken = urlParams.get('access_token');
+            
+            if (type === 'recovery' && accessToken) {
+                setTimeout(() => {
+                    document.getElementById('resetPasswordModal').classList.add('active');
+                }, 500);
+            }
+        }
+
         function showForgotPasswordModal() {
             document.getElementById('forgotPasswordModal').classList.add('active');
             document.getElementById('forgotPasswordEmail').focus();
@@ -995,9 +1015,22 @@
             document.getElementById('forgotPasswordMessage').textContent = '';
         }
 
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').classList.remove('active');
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('resetPasswordMessage').textContent = '';
+        }
+
         function handleForgotPasswordKeypress(e) {
             if (e.key === 'Enter') {
                 sendPasswordResetEmail();
+            }
+        }
+
+        function handleResetPasswordKeypress(e) {
+            if (e.key === 'Enter') {
+                updatePassword();
             }
         }
 
@@ -1016,9 +1049,46 @@
             if (error) {
                 showForgotPasswordMessage('Erro: ' + error.message, 'error');
             } else {
-                showForgotPasswordMessage('Link de redefinição enviado! Verifique seu email', 'success');
+                showForgotPasswordMessage('Link enviado! Verifique seu email', 'success');
                 setTimeout(() => {
                     closeForgotPasswordModal();
+                }, 2000);
+            }
+        }
+
+        async function updatePassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!newPassword || !confirmPassword) {
+                showResetPasswordMessage('Preencha ambos os campos', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showResetPasswordMessage('Senha deve ter no mínimo 6 caracteres', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showResetPasswordMessage('As senhas não conferem', 'error');
+                return;
+            }
+            
+            const { error } = await supabase.auth.updateUser({ 
+                password: newPassword 
+            });
+            
+            if (error) {
+                showResetPasswordMessage('Erro: ' + error.message, 'error');
+            } else {
+                showResetPasswordMessage('✓ Senha atualizada com sucesso!', 'success');
+                window.location.hash = '';
+                setTimeout(() => {
+                    closeResetPasswordModal();
+                    document.getElementById('authScreen').style.display = 'flex';
+                    document.getElementById('appScreen').style.display = 'none';
+                    showAuthMessage('Senha redefinida! Faça login com a nova senha', 'success');
                 }, 2000);
             }
         }
@@ -1029,7 +1099,13 @@
             msgDiv.className = type === 'error' ? 'auth-message error' : 'auth-message success';
         }
 
-        // Auth handlers
+        function showResetPasswordMessage(msg, type) {
+            const msgDiv = document.getElementById('resetPasswordMessage');
+            msgDiv.textContent = msg;
+            msgDiv.className = type === 'error' ? 'auth-message error' : 'auth-message success';
+        }
+
+        // ===== AUTH =====
         async function handleLogin() {
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value.trim();
@@ -1105,7 +1181,7 @@
             setTimeout(() => { msgDiv.textContent = ''; msgDiv.className = ''; }, 4000);
         }
 
-        // App functions
+        // ===== APP =====
         async function loadApp() {
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'flex';
@@ -1180,7 +1256,7 @@
         async function createNewList() {
             const name = document.getElementById('newListName').value.trim();
             if (!name) {
-                alert('Digite um nome para a lista');
+                showNotification('Digite um nome para a lista', 'error');
                 return;
             }
 
@@ -1192,6 +1268,7 @@
             if (!error) {
                 document.getElementById('newListName').value = '';
                 await loadLists();
+                showNotification('Lista criada com sucesso!', 'success');
             }
         }
 
@@ -1256,12 +1333,19 @@
             const name = document.getElementById('itemName').value.trim();
             const category = document.getElementById('itemCategory').value;
             const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
-            const value = parseFloat(document.getElementById('itemValue').value) || 0;
+            const unitValue = parseFloat(document.getElementById('itemValue').value) || 0;
 
             if (!name || !currentListId) {
-                alert('Preencha o nome do item');
+                showNotification('Preencha o nome do item e o valor', 'error');
                 return;
             }
+
+            if (unitValue <= 0) {
+                showNotification('Digite um valor unitário válido', 'error');
+                return;
+            }
+
+            const totalItemValue = quantity * unitValue;
 
             await supabase
                 .from('shopping_items')
@@ -1270,7 +1354,8 @@
                     name,
                     category,
                     quantity,
-                    value,
+                    unit_value: unitValue,
+                    value: totalItemValue,
                     purchased: false
                 });
 
@@ -1278,7 +1363,9 @@
             document.getElementById('itemCategory').value = '';
             document.getElementById('itemQuantity').value = '1';
             document.getElementById('itemValue').value = '';
+            
             await loadItems();
+            showNotification('✓ Item adicionado com sucesso!', 'success');
         }
 
         async function togglePurchased(itemId) {
@@ -1307,7 +1394,9 @@
                 items.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'list-item' + (item.purchased ? ' purchased' : '');
-                    const valueStr = item.value > 0 ? `R$ ${item.value.toFixed(2).replace('.', ',')}` : '—';
+                    
+                    const unitValueStr = item.unit_value > 0 ? `R$ ${item.unit_value.toFixed(2).replace('.', ',')}` : '—';
+                    const totalValueStr = item.value > 0 ? `R$ ${item.value.toFixed(2).replace('.', ',')}` : '—';
                     
                     div.innerHTML = `
                         <div>
@@ -1315,7 +1404,10 @@
                             ${item.category ? `<div class="item-category">${item.category}</div>` : ''}
                         </div>
                         <div class="item-quantity">${item.quantity}x</div>
-                        <div class="item-value">${valueStr}</div>
+                        <div class="item-value-calc">
+                            <div class="item-value-unit">${unitValueStr}</div>
+                            <div class="item-value-total">${totalValueStr}</div>
+                        </div>
                         <div class="item-actions">
                             <button class="btn-small btn-check" onclick="togglePurchased('${item.id}')">
                                 ${item.purchased ? '✓' : '○'}
@@ -1329,12 +1421,64 @@
 
             const total = items.length;
             const purchased = items.filter(i => i.purchased).length;
-            const totalValue = items.reduce((sum, i) => sum + (i.value * i.quantity), 0);
+            const totalValue = items.reduce((sum, i) => sum + (i.value || 0), 0);
+            const spentValue = items.filter(i => i.purchased).reduce((sum, i) => sum + (i.value || 0), 0);
+            const remainingValue = totalValue - spentValue;
 
             document.getElementById('totalItems').textContent = total;
             document.getElementById('purchasedItems').textContent = purchased;
             document.getElementById('totalValue').textContent = `R$ ${totalValue.toFixed(2).replace('.', ',')}`;
+            
+            updateStatistics(total, purchased, totalValue, spentValue, remainingValue);
             document.getElementById('summaryContainer').style.display = total > 0 ? 'grid' : 'none';
+        }
+
+        function updateStatistics(total, purchased, totalValue, spentValue, remainingValue) {
+            const statsContainer = document.getElementById('statisticsContainer');
+            
+            if (total === 0) {
+                statsContainer.style.display = 'none';
+                return;
+            }
+            
+            const percentagePurchased = Math.round((purchased / total) * 100);
+            const percentageSpent = Math.round((spentValue / totalValue) * 100) || 0;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total de Itens</div>
+                    <div class="stat-value">${total}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Comprados</div>
+                    <div class="stat-value">${purchased} (${percentagePurchased}%)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Valor Total</div>
+                    <div class="stat-value">R$ ${totalValue.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Já Gasto</div>
+                    <div class="stat-value">R$ ${spentValue.toFixed(2).replace('.', ',')} (${percentageSpent}%)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">A Gastar</div>
+                    <div class="stat-value">R$ ${remainingValue.toFixed(2).replace('.', ',')}</div>
+                </div>
+            `;
+            
+            statsContainer.style.display = 'grid';
+        }
+
+        function showNotification(msg, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = msg;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         async function addStockItem() {
@@ -1344,7 +1488,7 @@
             const notes = document.getElementById('stockItemNotes').value.trim();
 
             if (!name) {
-                alert('Digite o nome do item');
+                showNotification('Digite o nome do item', 'error');
                 return;
             }
 
@@ -1357,6 +1501,7 @@
             document.getElementById('stockItemCategory').value = '';
             document.getElementById('stockItemNotes').value = '';
             await loadStockItems();
+            showNotification('✓ Item adicionado ao estoque!', 'success');
         }
 
         async function deleteStockItem(itemId) {
@@ -1404,17 +1549,16 @@
             }
         }
 
-        // FUNÇÕES DE COMPARTILHAMENTO
         function buildShareText() {
             if (!currentListId || items.length === 0) {
-                alert('Nenhum item na lista para compartilhar.');
+                showNotification('Nenhum item na lista para compartilhar', 'error');
                 return null;
             }
 
             const currentList = lists.find(l => l.id === currentListId);
             const listName = currentList ? currentList.name : 'Minha Lista';
 
-            const totalValue = items.reduce((sum, i) => sum + (i.value * i.quantity), 0);
+            const totalValue = items.reduce((sum, i) => sum + (i.value || 0), 0);
             const purchased = items.filter(i => i.purchased).length;
 
             let lines = [];
@@ -1448,7 +1592,6 @@
             }
         }
 
-        // Check auth state APENAS UMA VEZ
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (authInitialized) return;
             
@@ -1459,186 +1602,8 @@
             }
         });
 
-        // Sistema de notificações
-        function showNotification(message, type = 'info') {
-            const container = document.body;
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            container.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'slideIn 0.3s ease reverse';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
+        checkPasswordResetToken();
 
-        // Filtros de itens
-        let currentFilter = 'todos';
-
-        function updateFilterButtons() {
-            const filterSection = document.getElementById('filterSection');
-            filterSection.innerHTML = '';
-
-            const filters = [
-                { id: 'todos', label: '📋 Todos' },
-                { id: 'comprados', label: '✓ Comprados' },
-                { id: 'nao-comprados', label: '○ Não Comprados' }
-            ];
-
-            filters.forEach(filter => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn' + (currentFilter === filter.id ? ' active' : '');
-                btn.textContent = filter.label;
-                btn.onclick = () => {
-                    currentFilter = filter.id;
-                    updateFilterButtons();
-                    updateListDisplay();
-                };
-                filterSection.appendChild(btn);
-            });
-        }
-
-        function getFilteredItems() {
-            switch(currentFilter) {
-                case 'comprados':
-                    return items.filter(i => i.purchased);
-                case 'nao-comprados':
-                    return items.filter(i => !i.purchased);
-                default:
-                    return items;
-            }
-        }
-
-        // Estatísticas melhoradas
-        function updateStatistics() {
-            const statsContainer = document.getElementById('statisticsContainer');
-            if (items.length === 0) {
-                statsContainer.style.display = 'none';
-                return;
-            }
-
-            const total = items.length;
-            const purchased = items.filter(i => i.purchased).length;
-            const pending = total - purchased;
-            const totalValue = items.reduce((sum, i) => sum + (i.value * i.quantity), 0);
-            const spentValue = items.filter(i => i.purchased).reduce((sum, i) => sum + (i.value * i.quantity), 0);
-
-            statsContainer.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-label">Total de Itens</div>
-                    <div class="stat-value">${total}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Comprados</div>
-                    <div class="stat-value">${purchased}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Faltam</div>
-                    <div class="stat-value">${pending}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Valor Total</div>
-                    <div class="stat-value">R$ ${totalValue.toFixed(2).replace('.', ',')}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Já Gasto</div>
-                    <div class="stat-value">R$ ${spentValue.toFixed(2).replace('.', ',')}</div>
-                </div>
-            `;
-            statsContainer.style.display = 'grid';
-        }
-
-        // Atualizar display com filtros
-        const originalUpdateListDisplay = updateListDisplay;
-        updateListDisplay = function() {
-            const itemsList = document.getElementById('itemsList');
-            itemsList.innerHTML = '';
-
-            const filteredItems = getFilteredItems();
-
-            if (filteredItems.length === 0) {
-                itemsList.innerHTML = '<div class="empty-state" style="padding: 20px;">Nenhum item nesta categoria</div>';
-            } else {
-                filteredItems.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'list-item' + (item.purchased ? ' purchased' : '');
-                    const valueStr = item.value > 0 ? `R$ ${item.value.toFixed(2).replace('.', ',')}` : '—';
-                    
-                    div.innerHTML = `
-                        <div>
-                            <div class="item-name">${item.name}</div>
-                            ${item.category ? `<div class="item-category">${item.category}</div>` : ''}
-                        </div>
-                        <div class="item-quantity">${item.quantity}x</div>
-                        <div class="item-value">${valueStr}</div>
-                        <div class="item-actions">
-                            <button class="btn-small btn-check" onclick="togglePurchased('${item.id}')">
-                                ${item.purchased ? '✓' : '○'}
-                            </button>
-                            <button class="btn-small btn-delete" onclick="deleteItem('${item.id}')">✕</button>
-                        </div>
-                    `;
-                    itemsList.appendChild(div);
-                });
-            }
-
-            updateStatistics();
-        };
-
-        // Atualizar ao carregar itens
-        const originalLoadItems = loadItems;
-        loadItems = async function() {
-            if (!currentListId) return;
-
-            const { data, error } = await supabase
-                .from('shopping_items')
-                .select('*')
-                .eq('list_id', currentListId)
-                .order('created_at', { ascending: true });
-
-            if (!error) {
-                items = data || [];
-                currentFilter = 'todos';
-                updateFilterButtons();
-                updateListDisplay();
-                showNotification('Lista atualizada!', 'success');
-            }
-        };
-
-        // Melhorar feedback ao adicionar item
-        const originalAddItem = addItem;
-        addItem = async function() {
-            const name = document.getElementById('itemName').value.trim();
-            const category = document.getElementById('itemCategory').value;
-            const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
-            const value = parseFloat(document.getElementById('itemValue').value) || 0;
-
-            if (!name || !currentListId) {
-                showNotification('Preencha o nome do item', 'error');
-                return;
-            }
-
-            await supabase
-                .from('shopping_items')
-                .insert({
-                    list_id: currentListId,
-                    name,
-                    category,
-                    quantity,
-                    value,
-                    purchased: false
-                });
-
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemCategory').value = '';
-            document.getElementById('itemQuantity').value = '1';
-            document.getElementById('itemValue').value = '';
-            await loadItems();
-            showNotification(`✓ "${name}" adicionado à lista!`, 'success');
-        };
-
-        // Export functions to global scope
         window.handleLogin = handleLogin;
         window.handleRegister = handleRegister;
         window.handleLogout = handleLogout;
@@ -1647,6 +1612,9 @@
         window.closeForgotPasswordModal = closeForgotPasswordModal;
         window.handleForgotPasswordKeypress = handleForgotPasswordKeypress;
         window.sendPasswordResetEmail = sendPasswordResetEmail;
+        window.handleResetPasswordKeypress = handleResetPasswordKeypress;
+        window.updatePassword = updatePassword;
+        window.closeResetPasswordModal = closeResetPasswordModal;
         window.createNewList = createNewList;
         window.addItem = addItem;
         window.togglePurchased = togglePurchased;
@@ -1657,6 +1625,7 @@
         window.switchTab = switchTab;
         window.shareList = shareList;
         window.showNotification = showNotification;
+        window.updateStatistics = updateStatistics;
     </script>
 </body>
 </html>
