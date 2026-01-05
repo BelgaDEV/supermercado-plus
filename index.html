@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermercado Plus - Com Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .auth-screen {
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-box h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .auth-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .auth-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .auth-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-login:hover {
+            background: #5568d3;
+        }
+
+        .btn-register {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-register:hover {
+            background: #d0d0d0;
+        }
+
+        .auth-message {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .auth-message.error {
+            color: #f44336;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .auth-message.success {
+            color: #4caf50;
+            padding: 10px;
+            background: #f0f8f0;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-email {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #ddd;
+            background: white;
+            padding: 0 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .list-header {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            display: grid;
+            grid-template-columns: 1fr 80px 100px 80px;
+            gap: 10px;
+            border-bottom: 1px solid #eee;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .list-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            grid-template-columns: 1fr 80px 100px 80px;
+            gap: 10px;
+            align-items: center;
+            transition: background 0.2s ease;
+            background: white;
+        }
+
+        .list-item:hover {
+            background: #f8f9fa;
+        }
+
+        .list-item.purchased {
+            opacity: 0.6;
+            background: #f0f8f0;
+        }
+
+        .list-item.purchased .item-name {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .item-name {
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .item-category {
+            font-size: 12px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .item-quantity {
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .item-value {
+            text-align: right;
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-check {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-check:hover {
+            background: #45a049;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #da190b;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .new-list-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 15px 0;
+            color: #333;
+        }
+
+        .list-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .list-btn {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .list-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .list-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .list-btn.delete-list {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #f44336;
+            font-size: 12px;
+            padding: 8px 10px;
+        }
+
+        .list-btn.delete-list:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .sync-indicator {
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .sync-indicator.syncing {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .header {
+                padding: 12px 15px;
+            }
+
+            .content {
+                padding: 12px;
+            }
+
+            .list-header,
+            .list-item {
+                grid-template-columns: 1fr 50px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .item-actions {
+                grid-column: 1 / -1;
+                justify-content: flex-start;
+                margin-top: 8px;
+                gap: 4px;
+            }
+
+            .tab {
+                padding: 12px 8px;
+                font-size: 12px;
+            }
+
+            .auth-box {
+                padding: 30px 20px;
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- AUTH SCREEN -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-box">
+            <h1>🛒 Supermercado Plus</h1>
+            <div id="authMessage"></div>
+            <input 
+                type="email" 
+                id="authEmail" 
+                placeholder="Email"
+                onkeypress="handleAuthKeypress(event)"
+            >
+            <input 
+                type="password" 
+                id="authPassword" 
+                placeholder="Senha"
+                onkeypress="handleAuthKeypress(event)"
+            >
+            <div class="auth-buttons">
+                <button class="btn-login" onclick="handleLogin()">Login</button>
+                <button class="btn-register" onclick="handleRegister()">Registrar</button>
+            </div>
+            <p class="auth-message">Use email e senha para entrar</p>
+        </div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="appScreen" class="container" style="display: none;">
+        <div class="header">
+            <h1>🛒 Supermercado Plus</h1>
+            <div class="user-info">
+                <div class="user-email" id="userEmail"></div>
+                <button class="btn-logout" onclick="handleLogout()">Sair</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="shopping" onclick="switchTab('shopping')">Compras</div>
+            <div class="tab" data-tab="stock" onclick="switchTab('stock')">Estoque</div>
+        </div>
+
+        <div class="content">
+            <!-- TAB: SHOPPING LISTS -->
+            <div id="shopping" class="tab-content active">
+                <div class="new-list-form">
+                    <h3 style="margin-bottom: 15px;">Nova Lista</h3>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="newListName" 
+                            placeholder="Nome da lista"
+                            maxlength="30"
+                        >
+                        <button class="btn-primary" onclick="createNewList()" style="width: 100%;">Criar Lista</button>
+                    </div>
+                </div>
+
+                <div class="section-title">Minhas Listas</div>
+                <div class="list-selector" id="listSelector"></div>
+
+                <div id="noListsMessage" class="empty-state">
+                    <p>📋 Crie uma lista para começar</p>
+                </div>
+
+                <div id="listContent" style="display: none;">
+                    <div class="section-title">Adicionar Item</div>
+                    <div class="new-list-form">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                id="itemName" 
+                                placeholder="Nome do item"
+                                maxlength="50"
+                                onkeyup="autoSuggestCategory()"
+                            >
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <select id="itemCategory">
+                                <option value="">Categoria</option>
+                                <option value="Padaria">🥐 Padaria</option>
+                                <option value="Hortifruti">🥬 Hortifruti</option>
+                                <option value="Legumes">🌾 Legumes</option>
+                                <option value="Proteínas">🍗 Proteínas</option>
+                                <option value="Laticínios">🧀 Laticínios</option>
+                                <option value="Bebidas">🥤 Bebidas</option>
+                                <option value="Doces e Lanches">🍪 Doces e Lanches</option>
+                                <option value="Congelados">❄️ Congelados</option>
+                                <option value="Limpeza">🧹 Limpeza</option>
+                                <option value="Higiene">🧼 Higiene</option>
+                                <option value="Outros">📦 Outros</option>
+                            </select>
+                            <input 
+                                type="number" 
+                                id="itemQuantity" 
+                                placeholder="Qtd"
+                                min="1"
+                                value="1"
+                            >
+                        </div>
+                        <input 
+                            type="number" 
+                            id="itemValue" 
+                            placeholder="Valor (R$)"
+                            step="0.01"
+                            min="0"
+                        >
+                        <button class="btn-primary" onclick="addItem()" style="width: 100%; margin-top: 10px;">Adicionar</button>
+                    </div>
+
+                    <div id="itemsContainer" style="margin-top: 20px;">
+                        <div class="list-header">
+                            <div>Item</div>
+                            <div>Qtd.</div>
+                            <div>Valor</div>
+                            <div>Ações</div>
+                        </div>
+                        <div id="itemsList"></div>
+                    </div>
+
+                    <div id="summaryContainer" class="summary" style="display: none;">
+                        <div class="summary-item">
+                            <div class="summary-label">Total de Itens</div>
+                            <div class="summary-value" id="totalItems">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Itens Comprados</div>
+                            <div class="summary-value" id="purchasedItems">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Valor Total</div>
+                            <div class="summary-value" id="totalValue">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <div class="sync-indicator" id="syncStatus">✓ Sincronizado</div>
+                </div>
+            </div>
+
+            <!-- TAB: STOCK -->
+            <div id="stock" class="tab-content">
+                <div class="new-list-form">
+                    <h3 style="margin-bottom: 15px;">Adicionar ao Estoque</h3>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="stockItemName" 
+                            placeholder="Nome do item"
+                            maxlength="50"
+                        >
+                        <input 
+                            type="number" 
+                            id="stockItemQuantity" 
+                            placeholder="Quantidade"
+                            min="1"
+                            value="1"
+                        >
+                        <select id="stockItemCategory">
+                            <option value="">Categoria</option>
+                            <option value="Padaria">🥐 Padaria</option>
+                            <option value="Hortifruti">🥬 Hortifruti</option>
+                            <option value="Legumes">🌾 Legumes</option>
+                            <option value="Proteínas">🍗 Proteínas</option>
+                            <option value="Laticínios">🧀 Laticínios</option>
+                            <option value="Bebidas">🥤 Bebidas</option>
+                            <option value="Doces e Lanches">🍪 Doces e Lanches</option>
+                            <option value="Congelados">❄️ Congelados</option>
+                            <option value="Limpeza">🧹 Limpeza</option>
+                            <option value="Higiene">🧼 Higiene</option>
+                            <option value="Outros">📦 Outros</option>
+                        </select>
+                        <input 
+                            type="text" 
+                            id="stockItemNotes" 
+                            placeholder="Notas"
+                            maxlength="100"
+                        >
+                        <button class="btn-primary" onclick="addStockItem()" style="width: 100%;">Adicionar ao Estoque</button>
+                    </div>
+                </div>
+
+                <div class="section-title">Itens em Estoque</div>
+                <div id="stockContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
+
+        // Inicializar Supabase
+        const SUPABASE_URL = 'https://ozwqghlhtaigiesnaphn.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_kYhFng_sQiFRzqz4snW2GA_s3a8W08-';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global state
+        let currentUser = null;
+        let currentListId = null;
+        let lists = [];
+        let items = [];
+        let stockItems = [];
+
+        const productCategoryMap = {
+            'pão': 'Padaria', 'pão francês': 'Padaria', 'baguete': 'Padaria',
+            'maçã': 'Hortifruti', 'banana': 'Hortifruti', 'laranja': 'Hortifruti',
+            'arroz': 'Legumes', 'feijão': 'Legumes', 'macarrão': 'Legumes',
+            'frango': 'Proteínas', 'carne': 'Proteínas', 'peixe': 'Proteínas',
+            'leite': 'Laticínios', 'queijo': 'Laticínios', 'iogurte': 'Laticínios',
+            'água': 'Bebidas', 'suco': 'Bebidas', 'refrigerante': 'Bebidas',
+            'chocolate': 'Doces e Lanches', 'bolo': 'Doces e Lanches',
+            'sorvete': 'Congelados', 'pizza': 'Congelados',
+            'detergente': 'Limpeza', 'sabão': 'Limpeza',
+            'shampoo': 'Higiene', 'sabonete': 'Higiene'
+        };
+
+        // Auth handlers
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+
+            if (!email || !password) {
+                showAuthMessage('Preencha email e senha', 'error');
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                showAuthMessage(error.message, 'error');
+            } else {
+                currentUser = data.user;
+                loadApp();
+            }
+        }
+
+        async function handleRegister() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+
+            if (!email || !password) {
+                showAuthMessage('Preencha email e senha', 'error');
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) {
+                showAuthMessage(error.message, 'error');
+            } else {
+                showAuthMessage('Registrado com sucesso! Faça login agora', 'success');
+                document.getElementById('authEmail').value = '';
+                document.getElementById('authPassword').value = '';
+            }
+        }
+
+        async function handleLogout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            currentListId = null;
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+        }
+
+        function handleAuthKeypress(e) {
+            if (e.key === 'Enter') {
+                const email = document.getElementById('authEmail').value.trim();
+                const password = document.getElementById('authPassword').value.trim();
+                if (email && password) {
+                    handleLogin();
+                }
+            }
+        }
+
+        function showAuthMessage(msg, type) {
+            const msgDiv = document.getElementById('authMessage');
+            msgDiv.textContent = msg;
+            msgDiv.className = type === 'error' ? 'auth-message error' : 'auth-message success';
+            setTimeout(() => { msgDiv.textContent = ''; msgDiv.className = ''; }, 4000);
+        }
+
+        // App functions
+        async function loadApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'flex';
+            document.getElementById('userEmail').textContent = currentUser.email;
+            await loadLists();
+            setupRealtimeListeners();
+        }
+
+        async function loadLists() {
+            const { data, error } = await supabase
+                .from('shopping_lists')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (!error) {
+                lists = data || [];
+                updateListSelector();
+                if (lists.length > 0 && !currentListId) {
+                    currentListId = lists[0].id;
+                    await loadItems();
+                }
+            }
+        }
+
+        async function loadItems() {
+            if (!currentListId) return;
+
+            const { data, error } = await supabase
+                .from('shopping_items')
+                .select('*')
+                .eq('list_id', currentListId)
+                .order('created_at', { ascending: true });
+
+            if (!error) {
+                items = data || [];
+                updateListDisplay();
+            }
+        }
+
+        async function loadStockItems() {
+            const { data, error } = await supabase
+                .from('stock_items')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('added_at', { ascending: false });
+
+            if (!error) {
+                stockItems = data || [];
+                updateStockDisplay();
+            }
+        }
+
+        function setupRealtimeListeners() {
+            const listChannel = supabase
+                .channel('shopping_items_changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'shopping_items' },
+                    () => { loadItems(); }
+                )
+                .subscribe();
+
+            const stockChannel = supabase
+                .channel('stock_items_changes')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'stock_items' },
+                    () => { loadStockItems(); }
+                )
+                .subscribe();
+        }
+
+        async function createNewList() {
+            const name = document.getElementById('newListName').value.trim();
+            if (!name) {
+                alert('Digite um nome para a lista');
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('shopping_lists')
+                .insert({ name, user_id: currentUser.id })
+                .select();
+
+            if (!error) {
+                document.getElementById('newListName').value = '';
+                await loadLists();
+            } else {
+                alert('Erro ao criar lista: ' + error.message);
+            }
+        }
+
+        function updateListSelector() {
+            const selector = document.getElementById('listSelector');
+            selector.innerHTML = '';
+
+            lists.forEach(list => {
+                const btn = document.createElement('button');
+                btn.className = 'list-btn' + (list.id === currentListId ? ' active' : '');
+                btn.textContent = list.name;
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    currentListId = list.id;
+                    await loadItems();
+                    updateListSelector();
+                };
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'list-btn delete-list';
+                deleteBtn.textContent = '✕';
+                deleteBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (confirm('Deletar esta lista?')) {
+                        await supabase.from('shopping_lists').delete().eq('id', list.id);
+                        if (currentListId === list.id) {
+                            currentListId = null;
+                        }
+                        await loadLists();
+                    }
+                };
+
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.appendChild(btn);
+                wrapper.appendChild(deleteBtn);
+                selector.appendChild(wrapper);
+            });
+
+            if (lists.length === 0) {
+                document.getElementById('noListsMessage').style.display = 'block';
+                document.getElementById('listContent').style.display = 'none';
+            } else {
+                document.getElementById('noListsMessage').style.display = 'none';
+                document.getElementById('listContent').style.display = 'block';
+            }
+        }
+
+        function autoSuggestCategory() {
+            const name = document.getElementById('itemName').value.toLowerCase().trim();
+            const select = document.getElementById('itemCategory');
+            
+            for (const [key, category] of Object.entries(productCategoryMap)) {
+                if (name.includes(key) || key.includes(name)) {
+                    select.value = category;
+                    return;
+                }
+            }
+        }
+
+        async function addItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const category = document.getElementById('itemCategory').value;
+            const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
+            const value = parseFloat(document.getElementById('itemValue').value) || 0;
+
+            if (!name || !currentListId) {
+                alert('Preencha o nome do item');
+                return;
+            }
+
+            const { error } = await supabase
+                .from('shopping_items')
+                .insert({
+                    list_id: currentListId,
+                    name,
+                    category,
+                    quantity,
+                    value,
+                    purchased: false
+                });
+
+            if (!error) {
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemCategory').value = '';
+                document.getElementById('itemQuantity').value = '1';
+                document.getElementById('itemValue').value = '';
+                await loadItems();
+            }
+        }
+
+        async function togglePurchased(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (item) {
+                await supabase
+                    .from('shopping_items')
+                    .update({ purchased: !item.purchased })
+                    .eq('id', itemId);
+                await loadItems();
+            }
+        }
+
+        async function deleteItem(itemId) {
+            await supabase.from('shopping_items').delete().eq('id', itemId);
+            await loadItems();
+        }
+
+        function updateListDisplay() {
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+
+            if (items.length === 0) {
+                itemsList.innerHTML = '<div class="empty-state" style="padding: 20px;">Nenhum item</div>';
+            } else {
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'list-item' + (item.purchased ? ' purchased' : '');
+                    const valueStr = item.value > 0 ? `R$ ${item.value.toFixed(2).replace('.', ',')}` : '—';
+                    
+                    div.innerHTML = `
+                        <div>
+                            <div class="item-name">${item.name}</div>
+                            ${item.category ? `<div class="item-category">${item.category}</div>` : ''}
+                        </div>
+                        <div class="item-quantity">${item.quantity}x</div>
+                        <div class="item-value">${valueStr}</div>
+                        <div class="item-actions">
+                            <button class="btn-small btn-check" onclick="togglePurchased('${item.id}')">
+                                ${item.purchased ? '✓' : '○'}
+                            </button>
+                            <button class="btn-small btn-delete" onclick="deleteItem('${item.id}')">✕</button>
+                        </div>
+                    `;
+                    itemsList.appendChild(div);
+                });
+            }
+
+            const total = items.length;
+            const purchased = items.filter(i => i.purchased).length;
+            const totalValue = items.reduce((sum, i) => sum + (i.value * i.quantity), 0);
+
+            document.getElementById('totalItems').textContent = total;
+            document.getElementById('purchasedItems').textContent = purchased;
+            document.getElementById('totalValue').textContent = `R$ ${totalValue.toFixed(2).replace('.', ',')}`;
+            document.getElementById('summaryContainer').style.display = total > 0 ? 'grid' : 'none';
+        }
+
+        async function addStockItem() {
+            const name = document.getElementById('stockItemName').value.trim();
+            const quantity = parseInt(document.getElementById('stockItemQuantity').value) || 1;
+            const category = document.getElementById('stockItemCategory').value;
+            const notes = document.getElementById('stockItemNotes').value.trim();
+
+            if (!name) {
+                alert('Digite o nome do item');
+                return;
+            }
+
+            await supabase
+                .from('stock_items')
+                .insert({ name, quantity, category, notes, user_id: currentUser.id });
+
+            document.getElementById('stockItemName').value = '';
+            document.getElementById('stockItemQuantity').value = '1';
+            document.getElementById('stockItemCategory').value = '';
+            document.getElementById('stockItemNotes').value = '';
+            await loadStockItems();
+        }
+
+        async function deleteStockItem(itemId) {
+            await supabase.from('stock_items').delete().eq('id', itemId);
+            await loadStockItems();
+        }
+
+        function updateStockDisplay() {
+            const container = document.getElementById('stockContainer');
+            
+            if (stockItems.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Estoque vazio</p></div>';
+                return;
+            }
+
+            const grouped = {};
+            stockItems.forEach(item => {
+                const category = item.category || 'Outros';
+                if (!grouped[category]) grouped[category] = [];
+                grouped[category].push(item);
+            });
+
+            container.innerHTML = Object.entries(grouped).map(([category, items]) => `
+                <div class="section-title">${category}</div>
+                ${items.map(item => `
+                    <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 4px solid #667eea;">
+                        <div>
+                            <h3 style="margin: 0 0 5px 0; color: #333; font-size: 14px;">${item.name}</h3>
+                            <p style="margin: 0; font-size: 12px; color: #999;">Qtd: ${item.quantity}x ${item.notes ? '| 📌 ' + item.notes : ''}</p>
+                        </div>
+                        <button class="btn-small btn-delete" onclick="deleteStockItem('${item.id}')">Remover</button>
+                    </div>
+                `).join('')}
+            `).join('');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            if (tab === 'stock') {
+                loadStockItems();
+            }
+        }
+
+        // Check auth state
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                currentUser = session.user;
+                await loadApp();
+            } else {
+                currentUser = null;
+            }
+        });
+
+        // Export functions to global scope
+        window.handleLogin = handleLogin;
+        window.handleRegister = handleRegister;
+        window.handleLogout = handleLogout;
+        window.handleAuthKeypress = handleAuthKeypress;
+        window.createNewList = createNewList;
+        window.addItem = addItem;
+        window.togglePurchased = togglePurchased;
+        window.deleteItem = deleteItem;
+        window.autoSuggestCategory = autoSuggestCategory;
+        window.addStockItem = addStockItem;
+        window.deleteStockItem = deleteStockItem;
+        window.switchTab = switchTab;
+    </script>
+</body>
+</html>
